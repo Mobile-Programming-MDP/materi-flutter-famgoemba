@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "979704107663",
+    "project_id": "hobi-app-47e77",
+    "storage_bucket": "hobi-app-47e77.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:979704107663:android:7f9f009a4131a9b01956fa",
+        "android_client_info": {
+          "package_name": "com.example.kolektif_hobi"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA9JYRhadqPSLgeybm2o-LY8v14uxVAk6k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
