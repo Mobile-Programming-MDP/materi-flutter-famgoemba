@@ -1,5 +1,7 @@
 import 'package:cepu_app/screens/add_post_screen.dart';
 import 'package:cepu_app/screens/sign_in_screen.dart';
+import 'package:cepu_app/widgets/post_list_item.dart'; // <--- Pastikan file ini sudah dibuat
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -16,14 +18,13 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!mounted) return;
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (context) => SignInScreen()),
+      MaterialPageRoute(builder: (context) => const SignInScreen()),
       (route) => false,
     );
   }
 
-  //Fungsi untuk membuat url foto profile / avatar
   String generateAvatarUrl(String? fullName) {
-    final formattedName = fullName!.trim().replaceAll(' ', '+');
+    final formattedName = (fullName ?? 'User').trim().replaceAll(' ', '+');
     return 'https://ui-avatars.com/api/?name=$formattedName&color=FFFFFF&background=000000';
   }
 
@@ -34,30 +35,68 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text("Home Screen"),
         actions: [
           IconButton(
-            onPressed: () {
-              signOut();
-            },
-            icon: Icon(Icons.logout),
-            tooltip: "Sign Out",
+            onPressed: signOut,
+            icon: const Icon(Icons.logout),
           ),
         ],
       ),
       body: Column(
         children: [
-          Image.network(
-            generateAvatarUrl(
-              FirebaseAuth.instance.currentUser?.displayName.toString(),
+          // Bagian Header (Profil sesuai gambar image_1a796b.png)
+          const SizedBox(height: 20),
+          Center(
+            child: Image.network(
+              generateAvatarUrl(FirebaseAuth.instance.currentUser?.displayName),
+              width: 80,
+              height: 80,
             ),
-            width: 100,
-            height: 100,
           ),
-          SizedBox(height: 8.0),
+          const SizedBox(height: 10),
           Text(
-            FirebaseAuth.instance.currentUser!.displayName!,
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            FirebaseAuth.instance.currentUser?.displayName ?? "User",
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
-          SizedBox(height: 16.0),
-          const Center(child: Text("You Have Been Signed In!")),
+          const Text("You Have Been Signed In!"),
+          const SizedBox(height: 20),
+          const Divider(thickness: 1),
+
+          // BAGIAN LIST POSTINGAN
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              // GANTI 'posts' sesuai dengan nama collection di Firebase Console kamu
+              stream: FirebaseFirestore.instance.collection('posts').snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return Center(child: Text("Error: ${snapshot.error}"));
+                }
+
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const Center(
+                    child: Text("Tidak ada data ditemukan di database."),
+                  );
+                }
+
+                return ListView.builder(
+                  itemCount: snapshot.data!.docs.length,
+                  itemBuilder: (context, index) {
+                    // Ambil data tiap dokumen
+                    var doc = snapshot.data!.docs[index];
+                    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+
+                    return PostListItem(
+                      title: data['title'] ?? 'Tanpa Judul',
+                      description: data['description'] ?? 'Tanpa Deskripsi',
+                      imageUrl: data['imageUrl'] ?? 'https://via.placeholder.com/150', onDelete: () {  },
+                    );
+                  },
+                );
+              },
+            ),
+          ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
